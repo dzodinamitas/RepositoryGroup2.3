@@ -1,0 +1,144 @@
+public sealed class GeoCoordinate
+	{
+		private double _x;
+		private double _y;
+		private double _xOffset = 0;
+		private double _yOffset = 0;
+		private double _latitude = 0;
+		private double _longitude = 0;
+
+		public double X
+		{
+			get { return _x; }
+			set {
+				Assert.True((_x + _xOffset) <= 20000000 && (_x + _xOffset) >= -20000000);
+				_x = value;
+				_longitude = (_x + _xOffset) / 20000000 * 648000;
+			}
+		}
+		public double Y
+		{
+			get { return _y; }
+			set {
+				Assert.True((_y + _yOffset) <= 10000000 && (_y + _yOffset) >= -10000000);
+				_y = value;
+				_latitude = (_y + _yOffset) / 10000000 * 324000;
+			}
+		}
+		public string Longitude
+		{
+			get {
+				double lgt = Math.Abs(_longitude);
+				int degrees = (int)(lgt / 3600);
+				int minutes = (int)(lgt / 60 - degrees * 60);
+				double seconds = lgt - degrees * 3600 - minutes * 60;
+				string result = $"{degrees}°{minutes}'{seconds}\"";
+				result += _longitude < 0 ? "E" : "W";
+				return result; 
+			}
+			set {
+				string input = value;
+				string pattern = @"(?<degrees>\d+)°(?<minutes>\d+)'(?<seconds>\d+)\""(?<direction>[WE])";
+				var match = Regex.Match(value, pattern);
+
+				if (match.Success)
+				{
+					int degrees = int.Parse(match.Groups["degrees"].Value);
+					int minutes = int.Parse(match.Groups["minutes"].Value);
+					double seconds = double.Parse(match.Groups["seconds"].Value);
+					string direction = match.Groups["direction"].Value;
+					_longitude = degrees*3600 + minutes*60 + seconds;
+					_longitude *= direction == "E" ? -1 : 1; 
+				}
+				Assert.True(match.Success);
+				_x = _longitude / 648000 * 20000000 - _xOffset;
+			}
+		}
+		public string Latitude
+		{
+			get
+			{
+				double lgt = Math.Abs(_latitude);
+				int degrees = (int)(lgt / 3600);
+				int minutes = (int)(lgt / 60 - degrees * 60);
+				double seconds = lgt - degrees * 3600 - minutes * 60;
+				string result = $"{degrees}°{minutes}'{seconds}\"";
+				result += _latitude < 0 ? "S" : "N";
+				return result;
+			}
+			set
+			{
+				string pattern = @"(?<degrees>\d+)°(?<minutes>\d+)'(?<seconds>\d+)\""(?<direction>[NS])";
+				var match = Regex.Match(value, pattern);
+
+				if (match.Success)
+				{
+					int degrees = int.Parse(match.Groups["degrees"].Value);
+					int minutes = int.Parse(match.Groups["minutes"].Value);
+					double seconds = double.Parse(match.Groups["seconds"].Value);
+					string direction = match.Groups["direction"].Value;
+					_latitude = degrees * 3600 + minutes * 60 + seconds;
+					_latitude *= direction == "S" ? -1 : 1;
+				}
+				Assert.True(match.Success);
+				_y = _latitude / 324000 * 10000000 - _yOffset;
+			}
+		}
+
+		public GeoCoordinate()
+		{
+
+		}
+		/// <summary>
+		/// The closer you are to initial coordinates, the more accurate calculations are. So offset is necessary
+		/// to map your local space to global space for more realistic geo numbers. (If we take a small slice of a
+		/// sphere it is almost a plane)
+		/// </summary>
+		/// <param name="xOffset"></param>
+		/// <param name="yOffset"></param>
+		public GeoCoordinate(double xOffset, double yOffset)
+		{
+			Assert.True(xOffset <= 20000000 && xOffset >= -20000000);
+			Assert.True(yOffset <= 10000000 && yOffset >= -10000000);
+			_xOffset = xOffset;
+			_yOffset= yOffset;
+		}
+		public DMSCoordinate GetDMSCoordinates()
+		{
+			return new DMSCoordinate(Latitude, Longitude);
+		}
+		public XYCoordinate GetXYCoordinates()
+		{
+			return new XYCoordinate(X, Y);
+		}
+		public void SetXYCoordinates(double x, double y)
+		{
+			X = x;
+			Y = y;
+		}
+		public void SetDMSCoordinates(string longitude, string latitude)
+		{
+			Longitude = longitude;
+			Latitude = latitude;
+		}
+	}
+	public struct DMSCoordinate
+	{
+		public string latitude;
+		public string longitude;
+		public DMSCoordinate(string latitude, string longitude)
+		{
+			this.latitude = latitude;
+			this.longitude = longitude;
+		}
+	}
+	public struct XYCoordinate
+	{
+		public double x;
+		public double y;
+		public XYCoordinate(double x, double y)
+		{
+			this.x = x;
+			this.y = y;
+		}
+	}
