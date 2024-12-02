@@ -1,0 +1,5 @@
+C:\Users\Student\Desktop\DroneProject\DroneSimulation\obj\Debug\net5.0\DroneSimulation.csproj.AssemblyReference.cache
+C:\Users\Student\Desktop\DroneProject\DroneSimulation\obj\Debug\net5.0\DroneSimulation.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Student\Desktop\DroneProject\DroneSimulation\obj\Debug\net5.0\DroneSimulation.AssemblyInfoInputs.cache
+C:\Users\Student\Desktop\DroneProject\DroneSimulation\obj\Debug\net5.0\DroneSimulation.AssemblyInfo.cs
+C:\Users\Student\Desktop\DroneProject\DroneSimulation\obj\Debug\net5.0\DroneSimulation.csproj.CoreCompileInputs.cache
