@@ -3,18 +3,22 @@ using System.Collections.Generic;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class UAVAgentSS : Agent
 {
-	public Rigidbody[] rotors;
+	public Rigidbody[] rotorsRB;
 	public float[] thrustForces = new float[4];
 	public float maxThrust = 10f;
 	public Rigidbody body;
 	float idleThrust;
 	public float speed = 5f;
-	public Rigidbody rb;
+	public Rigidbody frameRB;
+	public Rigidbody uavRB;
+	public float randomTiltMaxValue = 20f;
 
+	bool firstFrame = true;
 	private void FixedUpdate()
 	{
 		//for (int i = 0; i < rotors.Length; i++)
@@ -22,9 +26,9 @@ public class UAVAgentSS : Agent
 		//	ApplyThrust(rotors[i], thrustForces[i]);
 		//}
 
-		Vector3 rotationAngles = body.rotation.eulerAngles;
-		float pitch = NormalizeAngle(rotationAngles.x); 
-		float roll = NormalizeAngle(rotationAngles.z);
+		//Vector3 rotationAngles = body.rotation.eulerAngles;
+		//float pitch = NormalizeAngle(rotationAngles.x); 
+		//float roll = NormalizeAngle(rotationAngles.z);
 
 		//Debug.Log($"Pitch: {pitch:F2}°, Roll: {roll:F2}°");
 		//Debug.Log(StepCount);
@@ -32,8 +36,15 @@ public class UAVAgentSS : Agent
 		//{
 		//	EndEpisode();
 		//}
+		if (CheckForExit())
+			OnTargetAreaExit();
 	}
-
+	private bool CheckForExit()
+	{
+		if (transform.position.x < -11 || transform.position.x > 11 || transform.position.y > 8 || transform.position.y < -3 || transform.position.z < -11 || transform.position.z > 11)
+			return true;
+		return false;
+	}
 	public override void CollectObservations(VectorSensor sensor)
 	{
 		sensor.AddObservation(transform.position.x);
@@ -55,7 +66,11 @@ public class UAVAgentSS : Agent
 		if (angle > 180) angle -= 360;
 		return angle;
 	}
-
+	public void OnTargetAreaExit()
+	{
+		AddReward(-1f);
+		EndEpisode();
+	}
 	public override void Initialize()
 	{
 		float gravityForce = body.mass * Physics.gravity.magnitude;
@@ -68,51 +83,47 @@ public class UAVAgentSS : Agent
 		}
 		ResetAgent();
 	}
-
 	public void MoveAgent(ActionSegment<int> act)
 	{
-		var dirToGo = Vector3.zero;
-		var rotateDir = Vector3.zero;
-
 		var action = act[0];
 
 		switch (action)
 		{
 			case 0:
-				ApplyThrust(rotors[0], idleThrust);
-				ApplyThrust(rotors[1], idleThrust);
-				ApplyThrust(rotors[2], idleThrust);
-				ApplyThrust(rotors[3], idleThrust);
+				ApplyThrust(rotorsRB[0], idleThrust);
+				ApplyThrust(rotorsRB[1], idleThrust);
+				ApplyThrust(rotorsRB[2], idleThrust);
+				ApplyThrust(rotorsRB[3], idleThrust);
 				break;
 			case 1:
-				ApplyThrust(rotors[0], idleThrust - speed);
-				ApplyThrust(rotors[1], idleThrust - speed);
-				ApplyThrust(rotors[2], idleThrust + speed);
-				ApplyThrust(rotors[3], idleThrust + speed);
+				ApplyThrust(rotorsRB[0], idleThrust - speed);
+				ApplyThrust(rotorsRB[1], idleThrust - speed);
+				ApplyThrust(rotorsRB[2], idleThrust + speed);
+				ApplyThrust(rotorsRB[3], idleThrust + speed);
 				break;
 			case 2:
-				ApplyThrust(rotors[0], idleThrust + speed);
-				ApplyThrust(rotors[1], idleThrust + speed);
-				ApplyThrust(rotors[2], idleThrust - speed);
-				ApplyThrust(rotors[3], idleThrust - speed);
+				ApplyThrust(rotorsRB[0], idleThrust + speed);
+				ApplyThrust(rotorsRB[1], idleThrust + speed);
+				ApplyThrust(rotorsRB[2], idleThrust - speed);
+				ApplyThrust(rotorsRB[3], idleThrust - speed);
 				break;
 			case 3:
-				ApplyThrust(rotors[0], idleThrust - speed);
-				ApplyThrust(rotors[1], idleThrust + speed);
-				ApplyThrust(rotors[2], idleThrust + speed);
-				ApplyThrust(rotors[3], idleThrust - speed);
+				ApplyThrust(rotorsRB[0], idleThrust - speed);
+				ApplyThrust(rotorsRB[1], idleThrust + speed);
+				ApplyThrust(rotorsRB[2], idleThrust + speed);
+				ApplyThrust(rotorsRB[3], idleThrust - speed);
 				break;
 			case 4:
-				ApplyThrust(rotors[0], idleThrust + speed);
-				ApplyThrust(rotors[1], idleThrust - speed);
-				ApplyThrust(rotors[2], idleThrust - speed);
-				ApplyThrust(rotors[3], idleThrust + speed);
+				ApplyThrust(rotorsRB[0], idleThrust + speed);
+				ApplyThrust(rotorsRB[1], idleThrust - speed);
+				ApplyThrust(rotorsRB[2], idleThrust - speed);
+				ApplyThrust(rotorsRB[3], idleThrust + speed);
 				break;
 			case 5:
-				ApplyThrust(rotors[0], idleThrust + speed);
-				ApplyThrust(rotors[1], idleThrust + speed);
-				ApplyThrust(rotors[2], idleThrust + speed);
-				ApplyThrust(rotors[3], idleThrust + speed);
+				ApplyThrust(rotorsRB[0], idleThrust + speed);
+				ApplyThrust(rotorsRB[1], idleThrust + speed);
+				ApplyThrust(rotorsRB[2], idleThrust + speed);
+				ApplyThrust(rotorsRB[3], idleThrust + speed);
 				break;
 		}
 	}
@@ -161,16 +172,25 @@ public class UAVAgentSS : Agent
 	{
 		transform.rotation = Quaternion.identity;
 		transform.position = new Vector3(0, 0, 0);
-		rb.linearVelocity = Vector3.zero;
-		rb.angularVelocity = Vector3.zero;
-		rotors[0].linearVelocity = Vector3.zero;
-		rotors[0].angularVelocity = Vector3.zero;
-		rotors[1].linearVelocity = Vector3.zero;
-		rotors[1].angularVelocity = Vector3.zero;
-		rotors[2].linearVelocity = Vector3.zero;
-		rotors[2].angularVelocity = Vector3.zero;
-		rotors[3].linearVelocity = Vector3.zero;
-		rotors[3].angularVelocity = Vector3.zero;
-	}
+		frameRB.linearVelocity = Vector3.zero;
+		frameRB.angularVelocity = Vector3.zero;
+		uavRB.linearVelocity = Vector3.zero;
+		uavRB.angularVelocity = Vector3.zero;
+		rotorsRB[0].linearVelocity = Vector3.zero;
+		rotorsRB[0].angularVelocity = Vector3.zero;
+		rotorsRB[1].linearVelocity = Vector3.zero;
+		rotorsRB[1].angularVelocity = Vector3.zero;
+		rotorsRB[2].linearVelocity = Vector3.zero;
+		rotorsRB[2].angularVelocity = Vector3.zero;
+		rotorsRB[3].linearVelocity = Vector3.zero;
+		rotorsRB[3].angularVelocity = Vector3.zero;
 
+		AddRandomTilt();
+	}
+	public void AddRandomTilt()
+	{
+		float randomX = Random.Range(-randomTiltMaxValue, randomTiltMaxValue);
+		float randomZ = Random.Range(-randomTiltMaxValue, randomTiltMaxValue);
+		transform.eulerAngles = new Vector3(randomX, transform.eulerAngles.y, randomZ);
+	}
 }
