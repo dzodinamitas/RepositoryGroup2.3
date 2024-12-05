@@ -8,8 +8,11 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
-    path: Assets/Scenes/Self-Stabilization.unity
+  - enabled: 0
+    path: Assets/Scenes/Self-stabilization.unity
     guid: 8725e15bee676da44b5aef1e5ffc9fef
+  - enabled: 1
+    path: Assets/Scenes/Self-stabilizationV2.unity
+    guid: 2397f3782dd61b54b9029d47e9c62e86
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
